@@ -1,0 +1,5 @@
+sentence-transformers==3.0.1
+faiss-cpu==1.8.0
+pypdf==4.2.0
+tiktoken==0.7.0
+python-dotenv==1.0.1
