@@ -85,7 +85,4 @@ Content-Type: application/json
 
 ---
 
-##  Notes for teammates
-- Data Scientist work (Sai): set up retrieval + Azure integration.  
-- Teammates can now integrate this backend with the **Discord bot frontend**.  
-- Keep `.env` **local only** (don’t commit secrets). Use `.env.example` as reference.  
+
