@@ -42,7 +42,7 @@ Server runs at:
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 ### Health check
 ```http
