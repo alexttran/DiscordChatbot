@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAG Backend Endpoint Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #e3e3e3;
+            color: #666;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-box {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .response-box pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 13px;
+            color: #333;
+            font-family: 'Courier New', monospace;
+        }
+
+        .response-empty {
+            color: #999;
+            font-style: italic;
+        }
+
+        .endpoint-card {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            color: #667eea;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .flex-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .flex-row .input-group {
+            flex: 1;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 RAG Backend Endpoint Tester</h1>
+        <p class="subtitle">Test your RAG backend endpoints to ensure they're working correctly</p>
+
+        <!-- Health Check Section -->
+        <div class="section">
+            <div class="section-title">
+                Health Check Endpoint
+                <span id="healthStatus" class="status-badge status-pending">Not Tested</span>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-url">GET <span id="healthUrl"></span>/health</div>
+                <button onclick="testHealthEndpoint()">Test Health Endpoint</button>
+                <div id="healthResponse" class="response-box" style="display: none;">
+                    <pre></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- RAG Answer Section -->
+        <div class="section">
+            <div class="section-title">
+                RAG Answer Endpoint
+                <span id="ragStatus" class="status-badge status-pending">Not Tested</span>
+            </div>
+            <div class="endpoint-card">
+                <div class="endpoint-url">POST <span id="ragUrl"></span>/rag/answer</div>
+                
+                <div class="input-group">
+                    <label for="backendUrl">Backend URL</label>
+                    <input type="text" id="backendUrl" value="http://127.0.0.1:8000" placeholder="http://127.0.0.1:8000">
+                </div>
+
+                <div class="input-group">
+                    <label for="query">Query</label>
+                    <textarea id="query" placeholder="Enter your question here...">When is team matching?</textarea>
+                </div>
+
+                <div class="flex-row">
+                    <div class="input-group">
+                        <label for="k">K (number of results)</label>
+                        <input type="number" id="k" value="4" min="1" max="10">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="provider">Provider</label>
+                        <select id="provider">
+                            <option value="azure">azure</option>
+                            <option value="openai">openai</option>
+                            <option value="local">local</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button onclick="testRagEndpoint()">Test RAG Endpoint</button>
+                <div id="ragResponse" class="response-box" style="display: none;">
+                    <pre></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const RAG_BACKEND_URL = process.env.RAG_BACKEND_URL
+        // Update URLs when backend URL changes
+        document.getElementById('backendUrl').addEventListener('input', updateUrls);
+        updateUrls();
+
+        function updateUrls() {
+            const url = document.getElementById('backendUrl').value;
+            document.getElementById('healthUrl').textContent = url;
+            document.getElementById('ragUrl').textContent = url;
+        }
+
+        async function testHealthEndpoint() {
+            const statusBadge = document.getElementById('healthStatus');
+            const responseBox = document.getElementById('healthResponse');
+            const responseText = responseBox.querySelector('pre');
+            const url = document.getElementById('backendUrl').value;
+
+            // Update UI
+            statusBadge.className = 'status-badge status-loading';
+            statusBadge.innerHTML = '<span class="spinner"></span> Testing...';
+            responseBox.style.display = 'block';
+            responseText.textContent = 'Sending request...';
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${url}/health`);
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success';
+                    responseText.textContent = `Status: ${response.status} ${response.statusText}\n` +
+                                              `Duration: ${duration}ms\n\n` +
+                                              `Response:\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Error';
+                responseText.textContent = `Error: ${error.message}\n\n` +
+                                          `Make sure your backend is running at ${url}`;
+            }
+        }
+
+        async function testRagEndpoint() {
+            const statusBadge = document.getElementById('ragStatus');
+            const responseBox = document.getElementById('ragResponse');
+            const responseText = responseBox.querySelector('pre');
+            const url = document.getElementById('backendUrl').value;
+            
+            const query = document.getElementById('query').value;
+            const k = parseInt(document.getElementById('k').value);
+            const provider = document.getElementById('provider').value;
+
+            if (!query.trim()) {
+                alert('Please enter a query');
+                return;
+            }
+
+            // Update UI
+            statusBadge.className = 'status-badge status-loading';
+            statusBadge.innerHTML = '<span class="spinner"></span> Testing...';
+            responseBox.style.display = 'block';
+            responseText.textContent = 'Sending request...';
+
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${url}/rag/answer`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query, k, provider })
+                });
+                const duration = Date.now() - startTime;
+                const data = await response.json();
+
+                if (response.ok) {
+                    statusBadge.className = 'status-badge status-success';
+                    statusBadge.textContent = '✓ Success';
+                    
+                    // Format response nicely
+                    let formattedResponse = `Status: ${response.status} ${response.statusText}\n` +
+                                          `Duration: ${duration}ms\n\n` +
+                                          `Request:\n${JSON.stringify({ query, k, provider }, null, 2)}\n\n` +
+                                          `Response:\n${JSON.stringify(data, null, 2)}`;
+                    
+                    responseText.textContent = formattedResponse;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}\n${JSON.stringify(data, null, 2)}`);
+                }
+            } catch (error) {
+                statusBadge.className = 'status-badge status-error';
+                statusBadge.textContent = '✗ Error';
+                responseText.textContent = `Error: ${error.message}\n\n` +
+                                          `Make sure your backend is running at ${url}`;
+            }
+        }
+    </script>
+</body>
+</html>
