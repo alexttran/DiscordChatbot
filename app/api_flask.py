@@ -1,8 +1,14 @@
 # app/api_flask.py
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from rag.rag import answer as rag_answer
 
 app = Flask(__name__)
+
+CORS(app, resources={
+    r"/health": {"origins": "*"},
+    r"/rag/*": {"origins": "*"}
+})
 
 @app.get("/health")
 def health():
