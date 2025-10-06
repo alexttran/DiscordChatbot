@@ -6,7 +6,7 @@ require('dotenv').config();
 // Configuration
 const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
 const CLIENT_ID = process.env.CLIENT_ID;
-const RAG_BACKEND_URL = process.env.RAG_BACKEND_URL || 'http://127.0.0.1:8000';
+const RAG_BACKEND_URL = process.env.RAG_BACKEND_URL;
 
 // Store conversation context for follow-ups
 // Format: { userId: { lastQuery: string, lastAnswer: string, contexts: array } }
